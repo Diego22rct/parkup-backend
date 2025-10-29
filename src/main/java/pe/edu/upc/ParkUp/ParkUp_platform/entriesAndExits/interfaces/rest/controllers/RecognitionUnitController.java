@@ -131,6 +131,7 @@ public class RecognitionUnitController {
             @ApiResponse(responseCode = "404", description = "Recognition unit not found")
     })
     public ResponseEntity<RecognitionUnitResource> controlBarrier(@Valid @RequestBody BarrierControlRequest request) {
+        // TODO: Revisar aqui el action no tiene donde guardarse, no esta siendo usando.
         try {
             var command = ControlBarrierCommandFromRequestAssembler.toCommandFromRequest(request);
             Optional<RecognitionUnit> recognitionUnitOptional = recognitionUnitCommandService.handle(command);
