@@ -29,6 +29,8 @@ public class DoorController {
 
     @PostMapping("/open-door")
     public ResponseEntity<String> openDoor(@RequestBody OpenDoorResource resource) {
+        //TODO: Hay fullcode para el qr, entonces cual es el fullcode que necesita este endpoint?
+
         String[] parts = resource.fullCode().replace("\"", "").split("-");
         if (parts.length != 2) {
             return ResponseEntity.badRequest().body("Formato inválido de full_code");
