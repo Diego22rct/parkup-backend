@@ -32,7 +32,7 @@ public class EdgeNodeRegistrationController {
     @PostMapping("/register")
     public ResponseEntity<RecognitionUnitResource> registerEdgeNode(
             @RequestBody EdgeNodeRegistrationResource registration) {
-
+        //TODO: Hay dos endpoints que hacen lo mismo pero en diferentes controllers
         EdgeNodeResource full = registrationMapper.toEdgeNodeResource(registration);
         RegisterEdgeNodeCommand command =
                 EdgeNodeCommandFromResourceAssembler.toCommandFromResource(full);
