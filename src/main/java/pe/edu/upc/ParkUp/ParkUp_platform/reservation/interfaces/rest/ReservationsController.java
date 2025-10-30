@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.upc.ParkUp.ParkUp_platform.reservation.domain.model.commands.CancelReservationCommand;
+import pe.edu.upc.ParkUp.ParkUp_platform.reservation.domain.model.commands.ConfirmPaymentCommand;
 import pe.edu.upc.ParkUp.ParkUp_platform.reservation.domain.model.queries.GetActiveReservationByUserIdQuery;
 import pe.edu.upc.ParkUp.ParkUp_platform.reservation.domain.model.queries.GetReservationByIdQuery;
 import pe.edu.upc.ParkUp.ParkUp_platform.reservation.domain.model.queries.GetReservationsByUserIdQuery;
@@ -139,6 +140,39 @@ public class ReservationsController {
 
         var resource = ReservationResourceFromEntityAssembler.toResourceFromEntity(reservation.get());
         return ResponseEntity.ok(resource);
+    }
+
+    /**
+     * Confirms payment for a reservation (manual endpoint - usually triggered by payment event)
+     *
+     * @param reservationId The reservation ID
+     * @return The updated reservation resource
+     */
+    @PutMapping("/{reservationId}/confirm-payment")
+    @Operation(summary = "Confirm payment for reservation", description = "Updates reservation status from PENDING_PAYMENT to ACTIVE")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Payment confirmed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid reservation status"),
+            @ApiResponse(responseCode = "404", description = "Reservation not found")
+    })
+    public ResponseEntity<ReservationResource> confirmPayment(@PathVariable Long reservationId) {
+        try {
+            var command = new ConfirmPaymentCommand(reservationId);
+            var reservation = reservationCommandService.handle(command);
+
+            if (reservation.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            var resource = ReservationResourceFromEntityAssembler.toResourceFromEntity(reservation.get());
+            return ResponseEntity.ok(resource);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     /**

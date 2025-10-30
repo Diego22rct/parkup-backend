@@ -2,6 +2,7 @@ package pe.edu.upc.ParkUp.ParkUp_platform.reservation.application.internal.comma
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.upc.ParkUp.ParkUp_platform.reservation.application.internal.outboundservices.NotificationService;
 import pe.edu.upc.ParkUp.ParkUp_platform.reservation.domain.model.aggregates.Reservation;
 import pe.edu.upc.ParkUp.ParkUp_platform.reservation.domain.model.commands.*;
 import pe.edu.upc.ParkUp.ParkUp_platform.reservation.domain.services.ReservationCommandService;
@@ -17,9 +18,12 @@ import java.util.Optional;
 public class ReservationCommandServiceImpl implements ReservationCommandService {
 
     private final ReservationRepository reservationRepository;
+    private final NotificationService notificationService;
 
-    public ReservationCommandServiceImpl(ReservationRepository reservationRepository) {
+    public ReservationCommandServiceImpl(ReservationRepository reservationRepository,
+                                        NotificationService notificationService) {
         this.reservationRepository = reservationRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -69,8 +73,11 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         reservation.cancel();
         var savedReservation = reservationRepository.save(reservation);
 
-        // TODO: Publish domain event using Spring ApplicationEventPublisher
-        // - ReservationCancelledEvent (for Notifications and Payments BCs)
+        // Send cancellation notification
+        notificationService.sendReservationCancelledNotification(
+                savedReservation.getUserId(),
+                savedReservation.getId()
+        );
 
         return Optional.of(savedReservation);
     }
@@ -85,8 +92,15 @@ public class ReservationCommandServiceImpl implements ReservationCommandService 
         reservation.confirmPayment();
         var savedReservation = reservationRepository.save(reservation);
 
-        // TODO: Publish domain event using Spring ApplicationEventPublisher
-        // - ReservationConfirmedEvent (for Notifications BC)
+        // Send WhatsApp notification (don't fail if notification fails)
+        try {
+            notificationService.sendReservationConfirmedNotification(
+                    savedReservation.getUserId(), 
+                    savedReservation.getId()
+            );
+        } catch (Exception e) {
+            System.err.println("Failed to send notification, but reservation was confirmed: " + e.getMessage());
+        }
 
         return Optional.of(savedReservation);
     }
