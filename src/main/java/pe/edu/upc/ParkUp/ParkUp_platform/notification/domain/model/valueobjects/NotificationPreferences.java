@@ -13,19 +13,18 @@ public class NotificationPreferences {
     
     private Boolean pushEnabled;
     private Boolean emailEnabled;
-    private Boolean smsEnabled;
+    private Boolean whatsappEnabled;
     
     protected NotificationPreferences() {
-        // Default: all channels enabled
-        this.pushEnabled = true;
-        this.emailEnabled = true;
-        this.smsEnabled = false; // SMS typically opt-in
+        this.pushEnabled = false;
+        this.emailEnabled = false;
+        this.whatsappEnabled = true; // WhatsApp typically opt-in
     }
-    
-    public NotificationPreferences(Boolean pushEnabled, Boolean emailEnabled, Boolean smsEnabled) {
+
+    public NotificationPreferences(Boolean pushEnabled, Boolean emailEnabled, Boolean whatsappEnabled) {
         this.pushEnabled = pushEnabled != null ? pushEnabled : true;
         this.emailEnabled = emailEnabled != null ? emailEnabled : true;
-        this.smsEnabled = smsEnabled != null ? smsEnabled : false;
+        this.whatsappEnabled = whatsappEnabled != null ? whatsappEnabled : false;
     }
     
     /**
@@ -35,7 +34,7 @@ public class NotificationPreferences {
         return switch (channel) {
             case PUSH -> Boolean.TRUE.equals(pushEnabled);
             case EMAIL -> Boolean.TRUE.equals(emailEnabled);
-            case SMS -> Boolean.TRUE.equals(smsEnabled);
+            case WHATSAPP -> Boolean.TRUE.equals(whatsappEnabled);
         };
     }
 }
