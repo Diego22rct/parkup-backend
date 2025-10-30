@@ -11,6 +11,7 @@ import pe.edu.upc.ParkUp.ParkUp_platform.notification.domain.model.entities.User
 import pe.edu.upc.ParkUp.ParkUp_platform.notification.domain.services.NotificationCommandService;
 import pe.edu.upc.ParkUp.ParkUp_platform.notification.infrastructure.persistence.jpa.repositories.NotificationLogRepository;
 import pe.edu.upc.ParkUp.ParkUp_platform.notification.infrastructure.persistence.jpa.repositories.UserDeviceRepository;
+import pe.edu.upc.ParkUp.ParkUp_platform.notification.interfaces.acl.ProfileContextFacade;
 
 import java.util.Optional;
 
@@ -26,22 +27,41 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
     private final PushNotificationProvider pushProvider;
     private final EmailNotificationProvider emailProvider;
     private final WhatsAppNotificationProvider whatsAppProvider;
+    private final ProfileContextFacade profileContextFacade;
 
     public NotificationCommandServiceImpl(NotificationLogRepository notificationLogRepository,
                                          UserDeviceRepository userDeviceRepository,
                                          PushNotificationProvider pushProvider,
                                          EmailNotificationProvider emailProvider,
-                                         WhatsAppNotificationProvider whatsAppProvider) {
+                                         WhatsAppNotificationProvider whatsAppProvider,
+                                         ProfileContextFacade profileContextFacade) {
         this.notificationLogRepository = notificationLogRepository;
         this.userDeviceRepository = userDeviceRepository;
         this.pushProvider = pushProvider;
         this.emailProvider = emailProvider;
         this.whatsAppProvider = whatsAppProvider;
+        this.profileContextFacade = profileContextFacade;
     }
 
     @Override
     @Transactional
     public Optional<NotificationLog> handle(SendNotificationCommand command) {
+        // Check if user has notifications enabled
+        if (!profileContextFacade.areNotificationsEnabled(command.userId())) {
+            System.out.println("⚠️ Notifications disabled for user " + command.userId());
+            // Still create log but mark as skipped
+            var notificationLog = new NotificationLog(
+                    command.userId(),
+                    command.channel(),
+                    command.type(),
+                    command.title(),
+                    command.message(),
+                    command.metadata()
+            );
+            notificationLog.markAsFailed("User has notifications disabled");
+            return Optional.of(notificationLogRepository.save(notificationLog));
+        }
+
         // Create notification log
         var notificationLog = new NotificationLog(
                 command.userId(),
@@ -152,15 +172,35 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
     }
 
     private String sendEmailNotification(Long userId, String subject, String message) {
-        // TODO: Get user email from User BC (via ACL or shared service)
-        String userEmail = "user" + userId + "@parkup.com"; // Mock email
+        // Check if user has email notifications enabled
+        if (!profileContextFacade.areEmailNotificationsEnabled(userId)) {
+            System.out.println("⚠️ Email notifications disabled for user " + userId);
+            return null;
+        }
+
+        // TODO: Get user email from IAM BC (via ACL or shared service)
+        String userEmail = "user" + userId + "@parkup.com"; // Mock email - should be fetched from IAM context
         
         return emailProvider.sendEmail(userEmail, subject, message, message);
     }
 
     private String sendWhatsAppNotification(Long userId, String message) {
-        // TODO: Get user phone number from User BC (via ACL)
-        String phoneNumber = "+51986091617"; // Mock phone number - should be fetched from user profile
+        // Check if user has SMS/WhatsApp notifications enabled
+        if (!profileContextFacade.areSmsNotificationsEnabled(userId)) {
+            System.out.println("⚠️ SMS/WhatsApp notifications disabled for user " + userId);
+            return null;
+        }
+
+        // Get user phone number from profile
+        var phoneNumberOpt = profileContextFacade.getUserPhoneNumber(userId);
+        
+        if (phoneNumberOpt.isEmpty()) {
+            System.err.println("❌ No phone number found for user " + userId);
+            return null;
+        }
+
+        String phoneNumber = phoneNumberOpt.get();
+        System.out.println("📱 Sending WhatsApp to: " + phoneNumber);
         
         return whatsAppProvider.sendWhatsApp(phoneNumber, message);
     }
