@@ -112,6 +112,15 @@
         </dependency>
         <!--*************** iam *********************** -->
 
+		<!--*************** Notification - Twilio SMS *********************** -->
+		<!-- https://mvnrepository.com/artifact/com.twilio.sdk/twilio -->
+		<dependency>
+			<groupId>com.twilio.sdk</groupId>
+			<artifactId>twilio</artifactId>
+			<version>10.5.1</version>
+		</dependency>
+		<!--*************** Notification - Twilio SMS *********************** -->
+
 	</dependencies>
 
 	<build>
