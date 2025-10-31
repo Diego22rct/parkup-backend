@@ -1,0 +1,60 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*.bak
+*.tmp
+*.orig
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+TROUBLESHOOTING.md
+USAGE_EXAMPLE.md
+INTEGRATION_GUIDE.md
+RESERVATION_IMPLEMENTATION_SUMMARY.md
+PROFILE_IMPLEMENTATION_SUMMARY.md
+NOTIFICATION_PROFILE_INTEGRATION.md
+INTEGRATION_SUMMARY.md
+
+# Tests
+src/test/
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose*.yml
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
